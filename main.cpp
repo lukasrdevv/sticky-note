@@ -115,7 +115,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     int y = workArea.bottom - NOTE_HEIGHT - 20;
 
     HWND hwnd = CreateWindowEx(
-        WS_EX_TOOLWINDOW, 
+        WS_EX_TOOLWINDOW | WS_EX_TOPMOST, 
         CLASS_NAME,
         L"Sticky Note",
         WS_POPUP | WS_VISIBLE, 
