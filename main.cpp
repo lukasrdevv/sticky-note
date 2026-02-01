@@ -9,6 +9,8 @@
 #include <commctrl.h>
 #include <shellapi.h>
 
+#include "resource.h"
+
 // Dimensions & Constants
 #define NOTE_WIDTH 250
 #define NOTE_HEIGHT 250
@@ -44,16 +46,10 @@ void SaveNote() {
     if (hFile == INVALID_HANDLE_VALUE) return;
 
     if (len > 0) {
-        // +1 for null terminator, though we might not write it or needed. 
-        // GetWindowTextW copies null terminator.
-        // Let's write just the text characters to keep file clean, or including null?
-        // Standard text editors don't like nulls mid-file, but this is a dump.
-        // Let's Allocate buffer
         wchar_t* buffer = (wchar_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (len + 1) * sizeof(wchar_t));
         if (buffer) {
             GetWindowText(hEdit, buffer, len + 1);
             DWORD bytesWritten;
-            // Write only valid chars, ignore null terminator for text file compatibility usually
             WriteFile(hFile, buffer, len * sizeof(wchar_t), &bytesWritten, NULL);
             HeapFree(GetProcessHeap(), 0, buffer);
         }
@@ -69,8 +65,6 @@ void LoadNote() {
 
     DWORD fileSize = GetFileSize(hFile, NULL);
     if (fileSize > 0) {
-        // Alloc buffer. fileSize is bytes.
-        // We add extra wchar for null terminator
         wchar_t* buffer = (wchar_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fileSize + sizeof(wchar_t));
         if (buffer) {
             DWORD bytesRead;
@@ -92,7 +86,8 @@ void InitNotifyIcon(HWND hwnd) {
     nid.uID = ID_TRAY_APP_ICON;
     nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     nid.uCallbackMessage = WM_TRAYICON;
-    nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    // Load Custom Icon
+    nid.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_APP_ICON)); 
     lstrcpy(nid.szTip, L"Sticky Note");
     Shell_NotifyIcon(NIM_ADD, &nid);
 }
@@ -107,6 +102,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.lpszClassName = CLASS_NAME;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1); 
+    // Load Custom Icon for Class as well (visible in Alt-Tab if toolwindow wasn't set, or task manager)
+    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON));
 
     RegisterClass(&wc);
 
